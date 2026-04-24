@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Node Protocol — Whitepaper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+  :root {
+    --black: #0A0A0A;
+    --white: #FFFFFF;
+    --blue: #2D3FE0;
+    --cyan: #00F0FF;
+    --gray: #888888;
+    --light-gray: #F5F5F5;
+    --border: #E0E0E0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #fff;
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  /* COVER PAGE */
+  .cover {
+    min-height: 100vh;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,240,255,0.12) 0%, transparent 70%);
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: 200px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(45,63,224,0.15) 0%, transparent 70%);
+  }
+
+  .cover-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 32px;
+    border: 1px solid rgba(0,240,255,0.3);
+    padding: 6px 16px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+
+  .cover h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.0;
+    margin-bottom: 8px;
+    letter-spacing: -2px;
+  }
+
+  .cover-subtitle {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--cyan);
+    margin-bottom: 40px;
+    letter-spacing: -0.5px;
+  }
+
+  .cover-desc {
+    font-size: 16px;
+    color: rgba(255,255,255,0.55);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 60px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 48px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 32px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .cover-meta-item label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .cover-meta-item span {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+  }
+
+  /* CONTENT */
+  .content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--light-gray);
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 64px;
+    page-break-after: always;
+  }
+
+  .toc h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 24px;
+    font-weight: 500;
+  }
+
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+  }
+
+  .toc ol li {
+    counter-increment: toc;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .toc ol li:last-child { border-bottom: none; }
+
+  .toc ol li::before {
+    content: "0" counter(toc);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue);
+    min-width: 24px;
+  }
+
+  .toc-title { color: var(--black); font-weight: 500; }
+
+  /* SECTIONS */
+  .section {
+    margin-bottom: 72px;
+  }
+
+  .section-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+
+  h2.section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1.15;
+    margin-bottom: 24px;
+    letter-spacing: -0.8px;
+  }
+
+  h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--black);
+    margin-top: 36px;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  p {
+    color: #333;
+    margin-bottom: 16px;
+  }
+
+  .divider {
+    height: 2px;
+    background: linear-gradient(to right, var(--blue), var(--cyan), transparent);
+    border-radius: 2px;
+    margin-bottom: 32px;
+  }
+
+  /* CALLOUT BOXES */
+  .callout {
+    border-left: 3px solid var(--blue);
+    background: rgba(45,63,224,0.04);
+    padding: 20px 24px;
+    border-radius: 0 8px 8px 0;
+    margin: 24px 0;
+  }
+
+  .callout p { margin: 0; color: #222; font-size: 14px; }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 32px 0;
+  }
+
+  .stat-card {
+    background: var(--black);
+    color: var(--white);
+    border-radius: 12px;
+    padding: 28px 24px;
+  }
+
+  .stat-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  th {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: #333;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--light-gray); }
+
+  /* TOKENOMICS */
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .token-row:last-child { border-bottom: none; }
+
+  .token-bar-wrap {
+    flex: 1;
+    background: var(--light-gray);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .token-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--blue), var(--cyan));
+  }
+
+  .token-label { min-width: 180px; font-size: 14px; color: #333; font-weight: 500; }
+  .token-pct { min-width: 48px; text-align: right; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--blue); }
+
+  /* EPOCH CARDS */
+  .epoch-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 28px 0;
+  }
+
+  .epoch-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  .epoch-card.active {
+    border-color: var(--blue);
+    background: rgba(45,63,224,0.03);
+  }
+
+  .epoch-tag {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+
+  .epoch-card h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .epoch-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .epoch-card ul li {
+    font-size: 13px;
+    color: #555;
+    padding: 5px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .epoch-card ul li::before {
+    content: '—';
+    color: var(--cyan);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ROADMAP */
+  .roadmap-item {
+    display: flex;
+    gap: 28px;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .roadmap-item::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 36px;
+    bottom: -32px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .roadmap-item:last-child::before { display: none; }
+
+  .roadmap-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .roadmap-dot span {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .roadmap-content h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 4px;
+  }
+
+  .roadmap-content p { font-size: 13px; color: #666; margin: 0; }
+
+  /* FOOTER */
+  .footer {
+    background: var(--black);
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 48px 40px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    margin-top: 80px;
+  }
+
+  .footer strong { color: rgba(255,255,255,0.7); }
+
+  /* PRINT */
+  @media print {
+    body { font-size: 13px; }
+    .cover { min-height: 100vh; }
+    .section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-tag">Whitepaper — V1.0</div>
+  <h1>Node</h1>
+  <div class="cover-subtitle">Gamified Virtual Node Running on Farcaster</div>
+  <p class="cover-desc">
+    A decentralized, gamified infrastructure participation layer built on Farcaster and Base — enabling anyone to run virtual blockchain nodes, earn $NODE rewards, and compete in a permissionless on-chain economy.
+  </p>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <label>Built By</label>
+      <span>Praxisbot / Hamza Muhammad</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Network</label>
+      <span>Base (L2)</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Platform</label>
+      <span>Farcaster Mini App</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><span class="toc-title">Abstract</span></li>
+      <li><span class="toc-title">The Problem — Blockchain Participation Barriers</span></li>
+      <li><span class="toc-title">The Node Solution</span></li>
+      <li><span class="toc-title">Epoch 1 — Proof of Concept</span></li>
+      <li><span class="toc-title">Epoch 2 — Scale & Tokenomics</span></li>
+      <li><span class="toc-title">$NODE Token</span></li>
+      <li><span class="toc-title">Node Genesis NFT</span></li>
+      <li><span class="toc-title">Technical Architecture</span></li>
+      <li><span class="toc-title">Revenue Model</span></li>
+      <li><span class="toc-title">Roadmap</span></li>
+      <li><span class="toc-title">Team</span></li>
+      <li><span class="toc-title">Disclaimer</span></li>
+    </ol>
+  </div>
+
+  <!-- 01 ABSTRACT -->
+  <div class="section">
+    <div class="section-num">01</div>
+    <h2 class="section-title">Abstract</h2>
+    <div class="divider"></div>
+    <p>Node is a gamified, virtual node-running protocol built as a Farcaster Mini App on Base. It lowers the barrier to blockchain infrastructure participation from thousands of dollars in hardware to a few taps on a phone — letting anyone spin up a virtual node, accumulate rewards, and compete in a live leaderboard economy.</p>
+    <p>Rather than requiring technical expertise or capital-intensive hardware, Node abstracts the complexity of node operation into a social, accessible game layer on top of the Farcaster social graph. Users earn $NODE tokens based on their activity, node uptime, and multiplier status.</p>
+    <p>Node launched its Epoch 1 as a working proof of concept, reaching 189 registered users and trending on Farcaster Apps. This whitepaper outlines the full protocol vision — covering Epoch 1 learnings, Epoch 2 mechanics, tokenomics, NFT infrastructure, and long-term roadmap.</p>
+  </div>
+
+  <!-- 02 PROBLEM -->
+  <div class="section">
+    <div class="section-num">02</div>
+    <h2 class="section-title">The Problem — Blockchain Participation Barriers</h2>
+    <div class="divider"></div>
+    <p>Participating in blockchain infrastructure has historically been the domain of well-capitalized, technically advanced operators. Running a validator or node on most networks requires:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Barrier</th>
+          <th>Current Reality</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Hardware cost</td><td>$500 – $10,000+ for qualifying node hardware</td></tr>
+        <tr><td>Technical knowledge</td><td>CLI fluency, server management, uptime monitoring</td></tr>
+        <tr><td>Capital stake</td><td>Minimum token holdings required (32 ETH for Ethereum)</td></tr>
+        <tr><td>Ongoing maintenance</td><td>Software updates, downtime penalties, slashing risk</td></tr>
+        <tr><td>Geographic access</td><td>Reliable internet + hardware import feasibility</td></tr>
+      </tbody>
+    </table>
+
+    <p>The result: the average person — especially in emerging markets like Africa — is excluded from infrastructure-level rewards. They can hold tokens or trade, but not participate at the layer that actually secures and runs the network.</p>
+
+    <div class="callout">
+      <p>Node's thesis: infrastructure participation should be as simple as opening a social app. The rewards should be real. The complexity should be hidden.</p>
+    </div>
+  </div>
+
+  <!-- 03 SOLUTION -->
+  <div class="section">
+    <div class="section-num">03</div>
+    <h2 class="section-title">The Node Solution</h2>
+    <div class="divider"></div>
+    <p>Node virtualizes the node-running experience entirely within a Farcaster Mini App. Users register a virtual node, keep it active through daily engagement, and earn $NODE rewards proportional to their activity and node tier.</p>
+
+    <h3>Core Mechanics</h3>
+    <p>Node's gameplay loop is simple but sticky. Users register their node, maintain uptime through daily check-ins, and are rewarded relative to their tier and engagement level. The social layer — built on Farcaster's open social graph — makes participation visible and competitive.</p>
+
+    <h3>Why Farcaster?</h3>
+    <p>Farcaster provides three things no other platform offers simultaneously: a crypto-native user base already familiar with wallets and tokens, a Mini App framework (Frames v2) that enables seamless in-app onchain actions, and a decentralized social graph that Node can leverage for referrals, leaderboards, and community growth.</p>
+
+    <h3>Why Base?</h3>
+    <p>Base is Coinbase's Ethereum L2 — fast, cheap, and deeply integrated with the Farcaster ecosystem. All $NODE token operations, NFT mints, and future staking contracts are deployed on Base, keeping transaction costs near-zero for users.</p>
+  </div>
+
+  <!-- 04 EPOCH 1 -->
+  <div class="section">
+    <div class="section-num">04</div>
+    <h2 class="section-title">Epoch 1 — Proof of Concept</h2>
+    <div class="divider"></div>
+    <p>Epoch 1 was Node's live validation phase — a working product shipped to prove the concept before building the full protocol. The results confirmed genuine demand.</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">189</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">#88</div>
+        <div class="stat-label">Farcaster App Trend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">$45</div>
+        <div class="stat-label">Revenue Generated</div>
+      </div>
+    </div>
+
+    <h3>Technical Stack</h3>
+    <p>Epoch 1 launched on a Vite/React/Wagmi stack, later migrated to Neynar Frame Studio for tighter Farcaster integration and faster iteration. The migration improved onboarding UX and enabled direct wallet interactions without leaving the Farcaster client.</p>
+
+    <h3>Key Learnings</h3>
+    <p>The upfront payment trust model showed friction — users were hesitant to pay before seeing sustained product value. Epoch 2 resolves this with a lower entry point ($1 USDC airdrop registration fee) and clearer reward transparency. The core engagement loop was validated: users returned daily to check node status, signaling that the gamification worked.</p>
+  </div>
+
+  <!-- 05 EPOCH 2 -->
+  <div class="section">
+    <div class="section-num">05</div>
+    <h2 class="section-title">Epoch 2 — Scale & Tokenomics</h2>
+    <div class="divider"></div>
+    <p>Epoch 2 is the full protocol launch — introducing the $NODE token, Genesis NFT multipliers, airdrop registration, and a capped user base designed to create scarcity-driven demand.</p>
+
+    <div class="epoch-cards">
+      <div class="epoch-card active">
+        <div class="epoch-tag">Epoch 1 — Complete</div>
+        <h4>Proof of Concept</h4>
+        <ul>
+          <li>189 users, $45 revenue</li>
+          <li>Trended #88 on Farcaster Apps</li>
+          <li>Vite/React stack, migrated to Neynar</li>
+          <li>Basic node registration and uptime tracking</li>
+          <li>Manual reward distribution</li>
+        </ul>
+      </div>
+      <div class="epoch-card">
+        <div class="epoch-tag">Epoch 2 — Upcoming</div>
+        <h4>Full Protocol</h4>
+        <ul>
+          <li>Max 2,000 slots (capped for scarcity)</li>
+          <li>$1 USDC airdrop registration fee</li>
+          <li>On-chain $NODE token rewards</li>
+          <li>Genesis NFT multiplier system</li>
+          <li>Tiered node classes</li>
+          <li>Public leaderboard</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Airdrop Registration</h3>
+    <p>Epoch 2 opens with a registration phase. Users pay a one-time $1 USDC fee to secure a slot and qualify for the $NODE airdrop at Token Generation Event (TGE). The fee serves as a Sybil-resistance mechanism and funds initial protocol operations. Total slots are hard-capped at 2,000, creating scarcity from day one.</p>
+
+    <h3>Multiplier System</h3>
+    <p>Not all nodes are equal. Epoch 2 introduces a multiplier system where users can boost their $NODE earnings based on their Node Genesis NFT holdings and activity streaks. Multipliers compound — rewarding consistent participants over passive registrants.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Multiplier Tier</th>
+          <th>Requirement</th>
+          <th>Reward Boost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Base Node</td><td>Registered + active</td><td>1x</td></tr>
+        <tr><td>Upgraded Node</td><td>7-day activity streak</td><td>1.5x</td></tr>
+        <tr><td>Genesis Node</td><td>Genesis NFT holder</td><td>2x</td></tr>
+        <tr><td>Elite Node</td><td>Genesis NFT + 30-day streak</td><td>3x</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 06 TOKEN -->
+  <div class="section">
+    <div class="section-num">06</div>
+    <h2 class="section-title">$NODE Token</h2>
+    <div class="divider"></div>
+    <p>$NODE is the native utility and reward token of the Node protocol. It is deployed on Base and serves as the primary incentive layer for node operators.</p>
+
+    <h3>Token Parameters</h3>
+    <table>
+      <thead>
+        <tr><th>Parameter</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Token Name</td><td>$NODE</td></tr>
+        <tr><td>Total Supply</td><td>100,000,000,000 (100B)</td></tr>
+        <tr><td>Network</td><td>Base (Ethereum L2)</td></tr>
+        <tr><td>Token Standard</td><td>ERC-20</td></tr>
+        <tr><td>TGE Trigger</td><td>Epoch 2 slot fill or set date</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Token Allocation</h3>
+    <div style="margin: 28px 0;">
+      <div class="token-row">
+        <div class="token-label">Node Operator Rewards</div>
+        <div class="token-bar-wrap"><div class="token-bar" style="width:50%"></div></div>
+        <div class="token-pct">50%</div>
+      </div>
+      <div class="token-row">
+        <div class="token-label">Epoch 2 Airdrop</div>
+        <div class="token-bar-wrap"><div class="token-bar" style="width:20%"></div></div>
+        <div class="token-pct">20%</div>
+      </div>
+      <div class="token-row">
+        <div class="token-label">Ecosystem & Partnerships</div>
+        <div class="token-bar-wrap"><div class="token-bar" style="width:15%"></div></div>
+        <div class="token-pct">15%</div>
+      </div>
+      <div class="token-row">
+        <div class="token-label">Team (12-month vest)</div>
+        <div class="token-bar-wrap"><div class="token-bar" style="width:10%"></div></div>
+        <div class="token-pct">10%</div>
+      </div>
+      <div class="token-row">
+        <div class="token-label">Protocol Reserve</div>
+        <div class="token-bar-wrap"><div class="token-bar" style="width:5%"></div></div>
+        <div class="token-pct">5%</div>
+      </div>
+    </div>
+
+    <h3>Utility</h3>
+    <p>$NODE tokens serve as in-protocol rewards claimable at TGE, governance tokens for future protocol decisions, potential staking collateral for node tier upgrades, and access keys for premium node features as the protocol evolves.</p>
+  </div>
+
+  <!-- 07 NFT -->
+  <div class="section">
+    <div class="section-num">07</div>
+    <h2 class="section-title">Node Genesis NFT</h2>
+    <div class="divider"></div>
+    <p>The Node Genesis NFT is a limited-edition on-chain credential for early believers. It is not speculative art — it is a functional protocol artifact that permanently unlocks multiplier benefits for its holder.</p>
+
+    <table>
+      <thead>
+        <tr><th>Parameter</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Editions</td><td>200 (hard cap)</td></tr>
+        <tr><td>Mint Price</td><td>0.00075 ETH</td></tr>
+        <tr><td>Network</td><td>Base</td></tr>
+        <tr><td>Marketplace</td><td>OpenSea (Base)</td></tr>
+        <tr><td>Benefit</td><td>2x $NODE reward multiplier (permanent)</td></tr>
+        <tr><td>Additional Benefit</td><td>Whitelist priority for future Praxisbot products</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p>The 200-edition hard cap is immutable. No additional Genesis NFTs will be minted at any future point. This makes Genesis NFT holders a permanently distinguished class of early Node supporters.</p>
+    </div>
+  </div>
+
+  <!-- 08 TECH -->
+  <div class="section">
+    <div class="section-num">08</div>
+    <h2 class="section-title">Technical Architecture</h2>
+    <div class="divider"></div>
+
+    <h3>Frontend</h3>
+    <p>Node is built as a Farcaster Mini App using Neynar Frame Studio — the native development environment for Frames v2. This enables wallet interactions, cast-gating, and social graph reads directly within the Farcaster client experience without requiring users to leave the app.</p>
+
+    <h3>Backend & Database</h3>
+    <p>The protocol's backend handles node state tracking, uptime calculations, multiplier logic, and leaderboard aggregation. Node state is persisted in a managed database with daily snapshot updates ensuring reward accuracy.</p>
+
+    <h3>On-Chain Layer</h3>
+    <p>All financial interactions — airdrop registration ($1 USDC), NFT minting, and future $NODE distributions — are executed on Base. Smart contracts are minimal by design, reducing attack surface and gas costs for end users.</p>
+
+    <h3>Farcaster Integration</h3>
+    <p>Node reads the Farcaster social graph via Neynar API to power referral tracking, user verification, and social proof features. This integration allows the protocol to Sybil-check participants against Farcaster identity — a meaningful signal of genuine crypto-native users.</p>
+
+    <table>
+      <thead>
+        <tr><th>Layer</th><th>Technology</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Mini App Framework</td><td>Neynar Frame Studio (Frames v2)</td></tr>
+        <tr><td>Blockchain</td><td>Base (Ethereum L2)</td></tr>
+        <tr><td>Token Standard</td><td>ERC-20 ($NODE) / ERC-721 (Genesis NFT)</td></tr>
+        <tr><td>Social Graph</td><td>Farcaster / Neynar API</td></tr>
+        <tr><td>Payment</td><td>USDC on Base</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 09 REVENUE -->
+  <div class="section">
+    <div class="section-num">09</div>
+    <h2 class="section-title">Revenue Model</h2>
+    <div class="divider"></div>
+    <p>Node is designed to be self-sustaining from launch. Revenue sources are diversified across registration fees, NFT sales, and future premium features.</p>
+
+    <table>
+      <thead>
+        <tr><th>Revenue Stream</th><th>Mechanism</th><th>Scale Potential</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Airdrop Registration</td><td>$1 USDC per slot, 2,000 max</td><td>$2,000 at full fill</td></tr>
+        <tr><td>Genesis NFT Sales</td><td>200 NFTs at 0.00075 ETH each</td><td>~0.15 ETH total</td></tr>
+        <tr><td>Epoch 3+ Registration</td><td>Higher-tier fees in future epochs</td><td>Scales with growth</td></tr>
+        <tr><td>Node Upgrades</td><td>In-app purchases for tier boosts</td><td>Recurring revenue</td></tr>
+        <tr><td>B2B Integrations</td><td>Projects sponsoring node tiers</td><td>Partnership-driven</td></tr>
+      </tbody>
+    </table>
+
+    <p>The protocol's initial revenue hypothesis is validated — Epoch 1 generated $45 with zero marketing spend. Epoch 2's structured fee model and larger cap creates a clear path to $2,000+ in launch revenue before token mechanics even activate.</p>
+  </div>
+
+  <!-- 10 ROADMAP -->
+  <div class="section">
+    <div class="section-num">10</div>
+    <h2 class="section-title">Roadmap</h2>
+    <div class="divider"></div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-dot"><span>1</span></div>
+      <div class="roadmap-content">
+        <h4>Epoch 1 — Shipped</h4>
+        <p>189 users, live product, #88 Farcaster trend. Proof of concept confirmed.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-dot"><span>2</span></div>
+      <div class="roadmap-content">
+        <h4>Epoch 2 Launch — Near-term</h4>
+        <p>2,000 slots, $1 USDC registration, multiplier system, Genesis NFT integration, public leaderboard.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-dot"><span>3</span></div>
+      <div class="roadmap-content">
+        <h4>$NODE TGE — On Epoch 2 Fill</h4>
+        <p>Token Generation Event triggered upon slot fill or designated date. Airdrop distribution to registered node runners.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-dot"><span>4</span></div>
+      <div class="roadmap-content">
+        <h4>Epoch 3 — Expansion</h4>
+        <p>Increased slot cap, $NODE staking, node-to-node delegation, B2B sponsorship tiers, and cross-product Praxisbot integration.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-dot"><span>5</span></div>
+      <div class="roadmap-content">
+        <h4>Protocol Maturity</h4>
+        <p>On-chain governance via $NODE, real infrastructure integrations, and potential migration to Chain Praxis (OP Stack L2).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 TEAM -->
+  <div class="section">
+    <div class="section-num">11</div>
+    <h2 class="section-title">Team</h2>
+    <div class="divider"></div>
+    <p>Node is built by Praxisbot — a solo Web3 product studio founded by Hamza Muhammad, operating at the intersection of AI, social, and on-chain infrastructure on Farcaster and Base.</p>
+
+    <div class="callout">
+      <p>Praxisbot's live product suite includes Node, CLAWXBOT (Farcaster auto-reply SaaS), YapArena (gamified Farcaster mindshare), CASTMINT (NFT marketplace), CALLOUT (prediction market), SpaceFar (Farcaster live audio), and Praxis AI — an AI-powered plain-English on-chain interaction layer. Every product is shipping.</p>
+    </div>
+
+    <p>The studio operates with a bias toward execution: building in public, shipping fast, and iterating based on real user feedback. Node is the longest-running product in the Praxisbot suite and reflects the depth of the team's commitment to the Farcaster/Base ecosystem.</p>
+  </div>
+
+  <!-- 12 DISCLAIMER -->
+  <div class="section">
+    <div class="section-num">12</div>
+    <h2 class="section-title">Disclaimer</h2>
+    <div class="divider"></div>
+    <p>This whitepaper is for informational purposes only and does not constitute financial, investment, or legal advice. $NODE tokens are utility tokens intended for use within the Node protocol ecosystem. Participation in any token sale, airdrop, or NFT mint carries inherent risks.</p>
+    <p>The Node protocol is under active development. Mechanics, timelines, and allocations described in this document may be subject to change as the protocol evolves. Praxisbot makes no guarantees of token value, returns, or investment outcomes.</p>
+    <p>Participants are responsible for ensuring compliance with the laws and regulations of their respective jurisdictions before engaging with Node protocol products.</p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>Node Protocol</strong> — Built by Praxisbot on Farcaster & Base<br><br>
+  &copy; 2025 Praxisbot. All rights reserved. | Farcaster: @PRESDENCY03
+</div>
+
+</body>
+</html>
